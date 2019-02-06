@@ -1,0 +1,4 @@
+
+nmap gp    :r ~/.clipboard  <cr>
+
+

@@ -1,11 +1,11 @@
 
+
 //////////////////////////////////////////
 //////////////////////////////////////////
 //////////////////////////////////////////
 #include <stdio.h>
 #define PATH_MAX 2500
 #if defined(__linux__) //linux
-#define PATH_MAX 2500
 #define MYOS 1
 #elif defined(_WIN32)
 #define MYOS 2
@@ -23,6 +23,8 @@
 #include <termios.h>
 #include <signal.h>
 #include <sys/ioctl.h>
+#include <time.h>
+
 
 #define ESC "\033"
 
@@ -49,6 +51,8 @@ void nsystem( char *mycmd )
    printf( "</SYSTEM>\n");
 }
 
+
+
 void editfichier( char *filesource )
 {
            char cmdi[PATH_MAX];
@@ -72,6 +76,24 @@ void export_refkey( char *mystring )
            strncat( cmdi , "}<Esc>\" " , PATH_MAX - strlen( cmdi ) -1 );
            nsystem( cmdi ); 
 }
+
+
+
+
+void export_clipboard( char *mystring )
+{
+           FILE *fpout;
+           char file[PATH_MAX];
+           strncpy( file , getenv( "HOME" ) , PATH_MAX );
+           strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
+           strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
+           fpout = fopen( file , "wb+");
+           fputs( "\\cite{", fpout );
+           fputs( mystring  , fpout );
+           fputs( "}\n", fpout );
+           fclose( fpout );
+}
+ 
 
 
 
@@ -349,6 +371,16 @@ int readsearch( char *filesource  , char *mystring , int viewit )
 
 int main( int argc, char *argv[])
 {
+
+    ////////////////////////////////////////////////////////
+    if ( argc == 2)
+    if ( strcmp( argv[1] , "time" ) ==  0 ) 
+    {
+       printf("%d\n", (int)time(NULL));
+       return 0;
+    }
+
+
     int key = 0;  int fooi;
     char fichier[PATH_MAX];
     char string[PATH_MAX];
@@ -361,14 +393,15 @@ int main( int argc, char *argv[])
     printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
     //printf("Env LINES: %s\n", getenv( "LINES" ));
     //printf("Env COLS:  %s\n", getenv( "COLUMNS" ));
-    printf("Env TP ROW:  %d\n", w.ws_row );
-    printf("Env TP COL:  %d\n", w.ws_col );
-
+    printf("Env TERM ROW:  %d\n", w.ws_row );
+    printf("Env TERM COL:  %d\n", w.ws_col );
 
     ///////////////
     if ( argc == 1)
+    {
+       printf("Usage: please enter a Bib file." );
        return 0;
-
+    }
 
     ///////////////
     if ( argc == 2)
@@ -453,6 +486,13 @@ int main( int argc, char *argv[])
         {
            printf( "|Fiche Pdf: %s|\n", fichepdffile );
            if ( strcmp( fichepdffile , "" ) != 0 ) open_pdf( fichepdffile );
+        }
+
+        else if (ch == 'y') 
+        {
+           printf( "|Fiche Reference %s|\n", ficheref );
+           export_clipboard( ficheref );
+           printf( "|=> Exported to File ~/.clipboard|\n" );
         }
 
         else if (ch == 'e') 
