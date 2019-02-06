@@ -3,7 +3,9 @@
 //////////////////////////////////////////
 //////////////////////////////////////////
 #include <stdio.h>
+#define PATH_MAX 2500
 #if defined(__linux__) //linux
+#define PATH_MAX 2500
 #define MYOS 1
 #elif defined(_WIN32)
 #define MYOS 2
@@ -17,18 +19,11 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-//#include <sys/ioctl.h>
 #include <unistd.h>
 #include <termios.h>
-
-
-
-#include <string.h>
 #include <signal.h>
 #include <sys/ioctl.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
+
 #define ESC "\033"
 
 #define home() 			printf(ESC "[H") //Move cursor to the indicated row, column (origin at 1,1)
