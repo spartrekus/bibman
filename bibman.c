@@ -34,6 +34,14 @@
 //	gotoxy(2,2 + i);
 
 
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
 
 int  fiche = 0;
 int  viewmode = 2;
@@ -182,6 +190,8 @@ void readfiche( char *filesource , int myitem )
    int pcc = 0; int tcc;  int ucc;  int occ;
    int artcount = 0;
    source = fopen( filesource , "r");
+
+   if ( source == NULL ) { printf( "File not found.\n" ); } else {
    while( ( ch = fgetc(source) ) != EOF )
    {
          if ( ch != '\n' )
@@ -268,6 +278,7 @@ void readfiche( char *filesource , int myitem )
          }
    }
    fclose(source);
+   }
 }
 
 
@@ -279,11 +290,13 @@ void readfile( char *filesource )
    FILE *source; 
    int ch ; 
    source = fopen( filesource , "r");
+   if ( source == NULL ) { printf( "File not found.\n" ); } else {
    while( ( ch = fgetc(source) ) != EOF )
    {
          printf( "%c", ch );
    }
    fclose(source);
+   }
 }
 
 
@@ -304,11 +317,12 @@ int readfile_export( char *filesource )
    int artcount = 0;
 
    FILE *fpout;
-   fpout =  fopen( "export.bib" , "wb+");
    source = fopen( filesource , "r");
+   if ( source == NULL ) { printf( "File not found.\n" ); } else 
+   {
+   fpout = fopen( "export.bib" , "wb+");
    while( ( ch = fgetc(source) ) != EOF )
    {
-
          if ( ch != '\n' )
             lline[pcc++]=ch;
 
@@ -322,14 +336,24 @@ int readfile_export( char *filesource )
 
              if ( lline[0] == '@' )
              {
-                 printf( "Article %d\n" , artcount );
-                 snprintf( string , 250 , "%dA0%d",  (int)time(NULL) , artcount );
-                 printf( " .Changing... %s\n" , lline );   
-                 printf( " .To ... refpub%s\n"     , string );   
-                 fputs( "@article{refpub" , fpout );
-                 fputs( string , fpout );
-                 fputs( "," , fpout );
-                 fputs( "\n" ,  fpout );
+                 if ( ( strstr( lline , "nref2019" ) != 0 ) 
+                    && ( strstr( lline, "{" ) != 0 ) )
+                 {
+                   printf( "%s\n" , lline );   
+                   fputs( lline , fpout );
+                   fputs( "\n" ,  fpout );
+                 }
+                 else
+                 {
+                   printf( "Article %d\n" , artcount );
+                   snprintf( string , 250 , "%dA0%d",  (int)time(NULL) , artcount );
+                     printf( " .Changing... %s\n" , lline );   
+                     printf( " .To ... refpub%s\n"     , string );   
+                   fputs( "@article{refpub" , fpout );
+                   fputs( string , fpout );
+                   fputs( "," , fpout );
+                   fputs( "\n" ,  fpout );
+                 }
              }
              else
              {
@@ -347,6 +371,7 @@ int readfile_export( char *filesource )
    }
    fclose(fpout);
    fclose(source);
+   }
 }
 
 
@@ -362,6 +387,7 @@ int readfilemk( char *filesource )
    int pcc = 0;
    int artcount = 0;
    source = fopen( filesource , "r");
+   if ( source == NULL ) { printf( "File not found.\n" ); } else {
    while( ( ch = fgetc(source) ) != EOF )
    {
 
@@ -389,6 +415,7 @@ int readfilemk( char *filesource )
          }
    }
    fclose(source);
+   }
    return readsearchi;
 }
 
@@ -432,6 +459,7 @@ int readsearch( char *filesource  , char *mystring , int viewit )
    int pcc = 0;
    int artcount = 0;
    source = fopen( filesource , "r");
+   if ( source == NULL ) { printf( "File not found.\n" ); } else {
    while( ( ch = fgetc(source) ) != EOF )
    {
 
@@ -470,6 +498,7 @@ int readsearch( char *filesource  , char *mystring , int viewit )
          }
    }
    fclose(source);
+   }
    return readsearchi;
 }
 
@@ -506,14 +535,21 @@ int main( int argc, char *argv[])
     ///////////////
     if ( argc == 1)
     {
+       printf("\n");
        printf("Usage: please enter a Bib file." );
-       return 0;
+       printf("\n");
+       //return 0;
     }
+
 
     ///////////////
     if ( argc == 2)
-     strncpy( fichier, argv[ 1 ] , PATH_MAX );
+      strncpy( fichier, argv[ 1 ] , PATH_MAX );
+    else
+      strncpy( fichier, "biblio.bib" , PATH_MAX );
 
+
+    printf("\n");
     printf("-==========-\n");
     printf("-= BIBMAN =-\n");
     printf("-==========-\n");
@@ -613,6 +649,9 @@ int main( int argc, char *argv[])
 
         else if (ch == 'c') 
           clear_screen();
+
+
+        else if ( ch == 'T' )     printf("%syellow\n", KYEL);
 
         else if (ch == 't') 
         {
