@@ -52,17 +52,18 @@ void nsystem( char *mycmd )
 }
 
 
-
-void editfichier( char *filesource )
+void nruncmd( char *filesource , char *cmdapp )
 {
            char cmdi[PATH_MAX];
-           strncpy( cmdi , " vim " , PATH_MAX );
+           strncpy( cmdi , "  " , PATH_MAX );
+           strncat( cmdi , cmdapp , PATH_MAX - strlen( cmdi ) -1 );
            strncat( cmdi , " " , PATH_MAX - strlen( cmdi ) -1 );
            strncat( cmdi , " \"" , PATH_MAX - strlen( cmdi ) -1 );
            strncat( cmdi ,  filesource , PATH_MAX - strlen( cmdi ) -1 );
            strncat( cmdi , "\" " , PATH_MAX - strlen( cmdi ) -1 );
            nsystem( cmdi ); 
 }
+
 
 
 void export_refkey( char *mystring )
@@ -289,6 +290,113 @@ void readfile( char *filesource )
 
 
 
+
+
+///////////////////////////////////////////
+int readfile_export( char *filesource ) 
+{
+   int readsearchi;
+   FILE *source; 
+   int ch ; 
+   char lline[PATH_MAX];
+   char string[PATH_MAX];
+   int pcc = 0;
+   int artcount = 0;
+
+   FILE *fpout;
+   fpout =  fopen( "export.bib" , "wb+");
+   source = fopen( filesource , "r");
+   while( ( ch = fgetc(source) ) != EOF )
+   {
+
+         if ( ch != '\n' )
+            lline[pcc++]=ch;
+
+         else if ( ch == '\n' ) 
+         {
+             lline[pcc++]='\0';
+
+             if ( lline[0] == '@' )
+             if ( strstr( lline, "{" ) != 0 ) 
+                  artcount++;
+
+             if ( lline[0] == '@' )
+             {
+                 printf( "Article %d\n" , artcount );
+                 snprintf( string , 250 , "%dA0%d",  (int)time(NULL) , artcount );
+                 printf( " .Changing... %s\n" , lline );   
+                 printf( " .To ... refpub%s\n"     , string );   
+                 fputs( "@article{refpub" , fpout );
+                 fputs( string , fpout );
+                 fputs( "," , fpout );
+                 fputs( "\n" ,  fpout );
+             }
+             else
+             {
+                printf( "%s\n" , lline );   
+                fputs( lline , fpout );
+                fputs( "\n" ,  fpout );
+             }
+
+             if ( lline[0] == '}' )
+                 printf( "Article %d\n" , artcount );
+
+             lline[0]='\0';
+             pcc = 0;
+         }
+   }
+   fclose(fpout);
+   fclose(source);
+}
+
+
+
+
+///////////////////////////////////////////
+int readfilemk( char *filesource ) 
+{
+   int readsearchi;
+   FILE *source; 
+   int ch ; 
+   char lline[PATH_MAX];
+   int pcc = 0;
+   int artcount = 0;
+   source = fopen( filesource , "r");
+   while( ( ch = fgetc(source) ) != EOF )
+   {
+
+         if ( ch != '\n' )
+            lline[pcc++]=ch;
+
+         else if ( ch == '\n' ) 
+         {
+             lline[pcc++]='\0';
+
+             if ( lline[0] == '@' )
+             if ( strstr( lline, "{" ) != 0 ) 
+                  artcount++;
+
+              if ( lline[0] == '@' )
+                  printf( "Article %d\n" , artcount );
+
+             printf( "%s\n" , lline );   
+
+             if ( lline[0] == '}' )
+                 printf( "Article %d\n" , artcount );
+
+             lline[0]='\0';
+             pcc = 0;
+         }
+   }
+   fclose(source);
+   return readsearchi;
+}
+
+
+
+
+
+
 void clear_screen()
 {
     int fooi;
@@ -379,7 +487,6 @@ int main( int argc, char *argv[])
        printf("%d\n", (int)time(NULL));
        return 0;
     }
-
 
     int key = 0;  int fooi;
     char fichier[PATH_MAX];
@@ -476,6 +583,9 @@ int main( int argc, char *argv[])
         else if (ch == 'p') 
           readfile( fichier );
 
+        else if (ch == 'P') 
+          readfilemk( fichier );
+
         else if (ch == 'r') 
         {
            printf( "|Fiche Reference: %s|\n", ficheref );
@@ -505,13 +615,29 @@ int main( int argc, char *argv[])
           clear_screen();
 
         else if (ch == 't') 
+        {
+          printf("-------------\n");
+          printf("- Settings  -\n" );
+          printf("-------------\n");
           size_screen();
+          printf("-------------\n");
+          printf("TIME (d): %d\n", (int)time(NULL));
+          snprintf( string , 250 , "%d",  (int)time(NULL) );
+          printf("TIME (d): %d\n", (int)time(NULL));
+          printf("Time (s): %s\n", string );
+          printf("Env HOME:  %s\n", getenv( "HOME" ));
+          printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
+          printf("-------------\n");
+        }
 
         else if (ch == 'l') 
           readfiche( fichier , fiche );
 
         else if (ch == 'v') 
-          editfichier( fichier );
+          nruncmd( fichier , " vim " );
+
+        else if (ch == 'V') 
+          nruncmd( fichier , " nedit " );
 
         else if (ch == 'w') 
         {
@@ -532,9 +658,13 @@ int main( int argc, char *argv[])
             printf("Enter a fiche number: ");
             scan_line( string , PATH_MAX);
             printf("got: \"%s\"\n", string );
+            printf("=> Set Fiche Number: \"%s\"\n", string );
             fiche = atoi( string );
             disable_waiting_for_enter();
-            if ( viewmode == 2 ) readfiche( fichier , fiche ); 
+            if ( viewmode == 2 ) 
+                 readfiche( fichier , fiche ); 
+            if ( viewmode == 3 ) 
+                 readfiche( fichier , fiche ); 
         }
 
         else if (ch == 'f') 
@@ -556,6 +686,42 @@ int main( int argc, char *argv[])
             scan_line( string , PATH_MAX);
             printf("got: \"%s\"\n", string );
             fooi = readsearch( fichier , string , 0 );
+            disable_waiting_for_enter();
+        }
+
+
+        else if (ch == 'a') 
+        {
+            enable_waiting_for_enter();
+            strncpy( string, "" , PATH_MAX );
+            printf("Enter yes to export : ");
+            scan_line( string , PATH_MAX);
+            printf("got: \"%s\"\n", string );
+            if ( strcmp( string, "yes" ) == 0 ) 
+               readfile_export( fichier );
+            disable_waiting_for_enter();
+        }
+
+        else if (ch == '$') 
+        {
+            enable_waiting_for_enter();
+            strncpy( string, "" , PATH_MAX );
+            printf("Enter a sys application: ");
+            scan_line( string , PATH_MAX);
+            printf("got: \"%s\"\n", string );
+            nsystem( string );
+            disable_waiting_for_enter();
+        }
+
+
+        else if (ch == '!') 
+        {
+            enable_waiting_for_enter();
+            strncpy( string, "" , PATH_MAX );
+            printf("Enter a cmd application: ");
+            scan_line( string , PATH_MAX);
+            printf("got: \"%s\"\n", string );
+            nruncmd( fichier , string );
             disable_waiting_for_enter();
         }
 
