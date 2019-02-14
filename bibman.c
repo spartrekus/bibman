@@ -44,9 +44,29 @@
 #define KWHT  "\x1B[37m"
 
 int  fiche = 0;
-int  viewmode = 2;
+//int  viewmode = 2;
+int  viewmode = 3;
 char ficheref[PATH_MAX]; 
 char fichepdffile[PATH_MAX]; 
+
+
+///////////////////////////////////////////
+void readfile( char *filesource )
+{
+   FILE *source; 
+   int ch ; 
+   source = fopen( filesource , "r");
+   if ( source == NULL ) { printf( "File not found.\n" ); } else {
+   while( ( ch = fgetc(source) ) != EOF )
+   {
+         printf( "%c", ch );
+   }
+   fclose(source);
+   }
+}
+
+
+
 
 
 
@@ -89,10 +109,27 @@ void export_refkey( char *mystring )
 
 
 
-void export_clipboard( char *mystring )
+void export_clipboard( char *mystring , int themode )
 {
            FILE *fpout;
            char file[PATH_MAX];
+
+     if ( themode == 9 ) {  
+           strncpy( file , getenv( "HOME" ) , PATH_MAX );
+           strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
+           strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
+           readfile( file );
+     }
+
+     else if ( themode == 0 ) {  
+           strncpy( file , getenv( "HOME" ) , PATH_MAX );
+           strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
+           strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
+           fpout = fopen( file , "wb+");
+           fclose( fpout );
+     }
+
+     else if ( themode == 1 ) {  
            strncpy( file , getenv( "HOME" ) , PATH_MAX );
            strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
            strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
@@ -101,6 +138,20 @@ void export_clipboard( char *mystring )
            fputs( mystring  , fpout );
            fputs( "}\n", fpout );
            fclose( fpout );
+     }
+     else if ( themode == 2 ) {  
+           strncpy( file , getenv( "HOME" ) , PATH_MAX );
+           strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
+           strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
+           fpout = fopen( file , "ab+");
+           //fputs( "\\cite{", fpout );
+           fputs( mystring  , fpout );
+           fputs( ",", fpout );
+           fclose( fpout );
+     }
+
+
+
 }
  
 
@@ -280,25 +331,6 @@ void readfiche( char *filesource , int myitem )
    fclose(source);
    }
 }
-
-
-
-
-///////////////////////////////////////////
-void readfile( char *filesource )
-{
-   FILE *source; 
-   int ch ; 
-   source = fopen( filesource , "r");
-   if ( source == NULL ) { printf( "File not found.\n" ); } else {
-   while( ( ch = fgetc(source) ) != EOF )
-   {
-         printf( "%c", ch );
-   }
-   fclose(source);
-   }
-}
-
 
 
 
@@ -634,14 +666,46 @@ int main( int argc, char *argv[])
            if ( strcmp( fichepdffile , "" ) != 0 ) open_pdf( fichepdffile );
         }
 
+        else if (ch == 'n') 
+        {
+           export_clipboard( ficheref , 0 );
+           printf( "|=> New to File ~/.clipboard|\n" );
+        }
+
         else if (ch == 'y') 
         {
            printf( "|Fiche Reference %s|\n", ficheref );
-           export_clipboard( ficheref );
-           printf( "|=> Exported to File ~/.clipboard|\n" );
+           export_clipboard( ficheref , 1 );
+           printf( "|=> Export to File ~/.clipboard|\n" );
+        }
+
+        else if ( ch == 'x' )
+        {
+           printf( "|=> View to File ~/.clipboard|\n" );
+           export_clipboard( ficheref , 9 );
+           printf( "|=> View to File ~/.clipboard|\n" );
+        }
+
+        else if ( (ch == 'Y')  || (ch == 'a')  )
+        {
+           printf( "|Fiche Reference %s|\n", ficheref );
+           export_clipboard( ficheref , 2 );
+           printf( "|=> Append to File ~/.clipboard|\n" );
         }
 
         else if (ch == 'e') 
+        {
+            enable_waiting_for_enter();
+            strncpy( string, "" , PATH_MAX );
+            printf("Enter yes to export : ");
+            scan_line( string , PATH_MAX);
+            printf("got: \"%s\"\n", string );
+            if ( strcmp( string, "yes" ) == 0 ) 
+               readfile_export( fichier );
+            disable_waiting_for_enter();
+        }
+
+        else if (ch == 'E') 
         {
            printf( "|Fiche Reference %s|\n", ficheref );
            export_refkey( ficheref );
@@ -678,7 +742,7 @@ int main( int argc, char *argv[])
         else if (ch == 'V') 
           nruncmd( fichier , " nedit " );
 
-        else if (ch == 'w') 
+        else if (ch == 's')  // like show
         {
             if ( viewmode == 1 ) 
                viewmode = 2; 
@@ -729,17 +793,6 @@ int main( int argc, char *argv[])
         }
 
 
-        else if (ch == 'a') 
-        {
-            enable_waiting_for_enter();
-            strncpy( string, "" , PATH_MAX );
-            printf("Enter yes to export : ");
-            scan_line( string , PATH_MAX);
-            printf("got: \"%s\"\n", string );
-            if ( strcmp( string, "yes" ) == 0 ) 
-               readfile_export( fichier );
-            disable_waiting_for_enter();
-        }
 
         else if (ch == '$') 
         {
