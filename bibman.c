@@ -609,6 +609,12 @@ int main( int argc, char *argv[])
             printf("   |FICHE:%d|", fiche );
         }
 
+        else if (ch == 'g') 
+        {
+            fiche = 1;
+            printf("   |FICHE:%d|", fiche );
+        }
+
         else if (ch == '+') 
         {
             fiche++;
@@ -716,8 +722,9 @@ int main( int argc, char *argv[])
 
 
         else if ( ch == 'T' )     printf("%syellow\n", KYEL);
+        else if ( ch == 't' )     printf("%syellow\n", KYEL);
 
-        else if (ch == 't') 
+        else if (ch == 'i') 
         {
           printf("-------------\n");
           printf("- Settings  -\n" );
@@ -754,7 +761,7 @@ int main( int argc, char *argv[])
         }
 
 
-        else if ( (ch == '#') || (ch == 'g') )
+        else if (ch == '#') 
         {
             enable_waiting_for_enter();
             strncpy( string, "" , PATH_MAX );
