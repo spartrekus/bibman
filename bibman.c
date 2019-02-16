@@ -44,7 +44,9 @@
 #define KWHT  "\x1B[37m"
 
 int  fiche = 0;
+int  notefiche = 0;
 int  viewmode = 3;
+int  viewkey = 0;
 char ficheref[PATH_MAX]; 
 char pathbefore[PATH_MAX];
 char fichepdffile[PATH_MAX]; 
@@ -641,13 +643,22 @@ int main( int argc, char *argv[])
     int ch;
     disable_waiting_for_enter();
     /* Key reading loop */
-    while (1) 
+    while ( 1 ) 
     {
+        if ( viewkey == 1 ) printf( "   You just pressed Key = C%c D%d.\n", ch , ch );
+
         printf("\n");
         //printf("=> |FICHE:%d|", fiche );
         printf("==>");
         printf(" Press Key:");
         ch = getchar();
+        if ( ch == '[' ) 
+        {
+           printf(" Arrow Key\n");
+           ch = getchar(); 
+           if      ( ch == 'A' ) ch = 258 ;
+           else if ( ch == 'B' ) ch = 259 ;
+        }
         printf( "%c\n", ch );
 
         if (ch == 'Q') return 0;  /* Press 'Q' to quit program */
@@ -667,13 +678,23 @@ int main( int argc, char *argv[])
 
         else if (ch == '+') 
         {
-            fiche++;
-            printf("   |FICHE:%d|", fiche );
+            notefiche++;
+            printf("   |NOTE FICHE:%d|", notefiche );
+            snprintf( string , 250 , "note = {not%d}",  notefiche );
+            fooi = readsearch( fichier , string , 1 );
+            fiche = fooi;
+            clear_screen( );
+            readfiche( fichier , fiche ); 
         }
         else if (ch == '-') 
         {
-            fiche--;
-            printf("   |FICHE:%d|", fiche );
+            notefiche--;
+            printf("   |NOTE FICHE:%d|", notefiche );
+            snprintf( string , 250 , "note = {not%d}",  notefiche );
+            fooi = readsearch( fichier , string , 1 );
+            fiche = fooi;
+            clear_screen( );
+            readfiche( fichier , fiche ); 
         }
 
         else if (ch == 'u') 
@@ -691,14 +712,14 @@ int main( int argc, char *argv[])
         }
 
 
-        else if (ch == 'j') 
+        else if ( (ch == 'j') || ( ch == 259 ) ) 
         {    fiche++;  
              if ( viewmode >= 3 ) clear_screen( );
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
              if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
         }
 
-        else if (ch == 'k') 
+        else if ( (ch == 'k') || ( ch == 258 ) ) 
         {    fiche--;  
              if ( viewmode >= 3 ) clear_screen( );
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
@@ -820,6 +841,14 @@ int main( int argc, char *argv[])
             printf( "Viewmode = %d\n", viewmode );
         }
 
+        else if (ch == 'S')  // like show
+        {
+            if ( viewkey == 1 ) 
+               viewkey = 0; 
+            else 
+               viewkey = 1; 
+            printf( "Viewkey = %d\n", viewkey );
+        }
 
         else if (ch == '#') 
         {
