@@ -44,10 +44,37 @@
 #define KWHT  "\x1B[37m"
 
 int  fiche = 0;
-//int  viewmode = 2;
 int  viewmode = 3;
 char ficheref[PATH_MAX]; 
+char pathbefore[PATH_MAX];
 char fichepdffile[PATH_MAX]; 
+
+
+
+void save_config_file( char *thefile )
+{
+   FILE *fpout; 
+   char foostr[250];
+   snprintf( foostr , 250 , "%d",  (int)time(NULL) );
+   fpout = fopen( ".bibmanrc" , "ab+");
+   fputs( "bibmanrc\n" , fpout );
+   fputs( "fichier=" , fpout );
+   fputs( thefile , fpout );
+   fputs( "\n" , fpout );
+   fputs( "time=" , fpout );
+   fputs( foostr , fpout );
+   fputs( "\n" , fpout );
+   fputs( "path=" , fpout );
+   fputs( pathbefore , fpout );
+   fputs( "\n" , fpout );
+   fputs( "edit=" , fpout );
+   fputs( " vim " , fpout );
+   fputs( "\"" , fpout );
+   fputs( thefile , fpout );
+   fputs( "\"" , fpout );
+   fputs( "\n" , fpout );
+   fclose( fpout );
+}
 
 
 ///////////////////////////////////////////
@@ -316,7 +343,17 @@ void readfiche( char *filesource , int myitem )
 
 
              if ( artcount == myitem )
-                printf( "%s\n" , lline );
+             {
+                if ( viewmode == 4 )  
+                {
+                   if ( strcmp( lline, "" ) != 0 ) 
+                      printf( "%s\n" , lline );
+                }
+                else
+                {
+                  printf( "%s\n" , lline );
+                }
+             }
 
              if ( lline[0] == '}' )
              if ( artcount == myitem )
@@ -540,10 +577,17 @@ int readsearch( char *filesource  , char *mystring , int viewit )
 
 int main( int argc, char *argv[])
 {
+    ////////////////////////////////////////////////////////
+    if ( argc == 2)
+    if ( strcmp( argv[1] , "-y" ) ==  0 ) 
+    {
+       printf("%syellow\n", KYEL);
+       return 0;
+    }
 
     ////////////////////////////////////////////////////////
     if ( argc == 2)
-    if ( strcmp( argv[1] , "time" ) ==  0 ) 
+    if ( strcmp( argv[1] , "-t" ) ==  0 ) 
     {
        printf("%d\n", (int)time(NULL));
        return 0;
@@ -552,6 +596,8 @@ int main( int argc, char *argv[])
     int key = 0;  int fooi;
     char fichier[PATH_MAX];
     char string[PATH_MAX];
+    strncpy( pathbefore, getcwd( string, PATH_MAX), PATH_MAX );
+
     strncpy( ficheref, "", PATH_MAX);
     strncpy( fichepdffile, "", PATH_MAX);
 
@@ -580,6 +626,10 @@ int main( int argc, char *argv[])
     else
       strncpy( fichier, "biblio.bib" , PATH_MAX );
 
+    chdir( pathbefore );
+    chdir( getenv( "HOME" ) );
+    save_config_file( fichier );
+    chdir( pathbefore );
 
     printf("\n");
     printf("-==========-\n");
@@ -628,30 +678,38 @@ int main( int argc, char *argv[])
 
         else if (ch == 'u') 
         {    fiche = fiche -10;
-             if ( viewmode == 3 ) clear_screen( );
+             if ( viewmode >= 3 ) clear_screen( );
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
-             if ( viewmode == 3 ) readfiche( fichier , fiche ); 
+             if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
         }
 
         else if (ch == 'd') 
         {    fiche = fiche +10;
-             if ( viewmode == 3 ) clear_screen( );
+             if ( viewmode >= 3 ) clear_screen( );
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
-             if ( viewmode == 3 ) readfiche( fichier , fiche ); 
+             if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
         }
+
 
         else if (ch == 'j') 
         {    fiche++;  
-             if ( viewmode == 3 ) clear_screen( );
+             if ( viewmode >= 3 ) clear_screen( );
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
-             if ( viewmode == 3 ) readfiche( fichier , fiche ); 
+             if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
         }
 
         else if (ch == 'k') 
         {    fiche--;  
-             if ( viewmode == 3 ) clear_screen( );
+             if ( viewmode >= 3 ) clear_screen( );
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
-             if ( viewmode == 3 ) readfiche( fichier , fiche ); 
+             if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
+        }
+
+        else if (ch == 32 ) 
+        {
+             if ( viewmode >= 3 ) clear_screen( );
+             if ( viewmode == 2 ) readfiche( fichier , fiche ); 
+             if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
         }
 
         else if (ch == 'p') 
@@ -755,6 +813,8 @@ int main( int argc, char *argv[])
                viewmode = 2; 
             else if ( viewmode == 2 ) 
                viewmode = 3; 
+            else if ( viewmode == 3 ) 
+               viewmode = 4; 
             else
                viewmode = 1; 
             printf( "Viewmode = %d\n", viewmode );
@@ -773,7 +833,7 @@ int main( int argc, char *argv[])
             disable_waiting_for_enter();
             if ( viewmode == 2 ) 
                  readfiche( fichier , fiche ); 
-            if ( viewmode == 3 ) 
+            if ( viewmode >= 3 ) 
                  readfiche( fichier , fiche ); 
         }
 
