@@ -47,6 +47,7 @@ int  fiche = 0;
 int  notefiche = 0;
 int  viewmode = 3;
 int  viewkey = 0;
+char refclip[PATH_MAX]; 
 char ficheref[PATH_MAX]; 
 char pathbefore[PATH_MAX];
 char fichepdffile[PATH_MAX]; 
@@ -143,22 +144,25 @@ void export_clipboard( char *mystring , int themode )
            FILE *fpout;
            char file[PATH_MAX];
 
-     if ( themode == 9 ) {  
+     if ( themode == 9 ) 
+     {  
            strncpy( file , getenv( "HOME" ) , PATH_MAX );
            strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
            strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
            readfile( file );
      }
 
-     else if ( themode == 0 ) {  
+     else if ( themode == 0 ) 
+     {   // new file
            strncpy( file , getenv( "HOME" ) , PATH_MAX );
            strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
            strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
            fpout = fopen( file , "wb+");
            fclose( fpout );
+           strncpy( refclip, "", PATH_MAX );
      }
-
-     else if ( themode == 1 ) {  
+     else if ( themode == 1 ) 
+     {  // copy one citation
            strncpy( file , getenv( "HOME" ) , PATH_MAX );
            strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
            strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
@@ -167,20 +171,33 @@ void export_clipboard( char *mystring , int themode )
            fputs( mystring  , fpout );
            fputs( "}\n", fpout );
            fclose( fpout );
+           strncpy( refclip, "", PATH_MAX );
+           strncat( refclip , "\\cite{" , PATH_MAX - strlen( refclip ) -1 );
+           strncat( refclip , mystring , PATH_MAX - strlen( refclip ) -1 );
+           strncat( refclip , "}" , PATH_MAX - strlen( refclip ) -1 );
      }
-     else if ( themode == 2 ) {  
+     else if ( themode == 2 ) 
+     {  // append several references
            strncpy( file , getenv( "HOME" ) , PATH_MAX );
            strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
            strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
            fpout = fopen( file , "ab+");
-           //fputs( "\\cite{", fpout );
            fputs( mystring  , fpout );
            fputs( ",", fpout );
            fclose( fpout );
+           strncat( refclip , mystring , PATH_MAX - strlen( refclip ) -1 );
+           strncat( refclip , ", " , PATH_MAX - strlen( refclip ) -1 );
      }
-
-
-
+     else if ( themode == 8 ) 
+     {     // add cite, to create a new cite index
+           strncpy( file , getenv( "HOME" ) , PATH_MAX );
+           strncat( file , "/" ,              PATH_MAX - strlen( file ) -1 );
+           strncat( file , ".clipboard" ,     PATH_MAX - strlen( file ) -1 );
+           fpout = fopen( file , "wb+");
+           fputs( "\\cite{", fpout );
+           fclose( fpout );
+           strncat( refclip , "\\cite{" , PATH_MAX - strlen( refclip ) -1 );
+     }
 }
  
 
@@ -595,6 +612,7 @@ int main( int argc, char *argv[])
        return 0;
     }
 
+    strncpy( refclip, "" , PATH_MAX );
     int key = 0;  int fooi;
     char fichier[PATH_MAX];
     char string[PATH_MAX];
@@ -771,9 +789,10 @@ int main( int argc, char *argv[])
            printf( "|=> View to File ~/.clipboard|\n" );
         }
 
-        else if ( (ch == 'Y')  || (ch == 'a')  )
+        else if (ch == 'a') 
         {
            printf( "|Fiche Reference %s|\n", ficheref );
+           if ( strcmp( refclip, "" ) == 0 )   export_clipboard( ficheref , 8 );
            export_clipboard( ficheref , 2 );
            printf( "|=> Append to File ~/.clipboard|\n" );
         }
@@ -816,6 +835,7 @@ int main( int argc, char *argv[])
           printf("Time (s): %s\n", string );
           printf("Env HOME:  %s\n", getenv( "HOME" ));
           printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
+          printf("Var refclip:  %s\n", refclip );
           printf("-------------\n");
         }
 
