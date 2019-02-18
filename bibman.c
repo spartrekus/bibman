@@ -27,7 +27,6 @@
 
 
 #define ESC "\033"
-
 #define home() 			printf(ESC "[H") //Move cursor to the indicated row, column (origin at 1,1)
 #define clrscr()		printf(ESC "[2J") //clear the screen, move to (1,1)
 #define gotoxy(x,y)		printf(ESC "[%d;%dH", y, x);
@@ -612,23 +611,34 @@ int main( int argc, char *argv[])
        return 0;
     }
 
+    struct winsize w; // need ioctl and unistd 
+    ioctl( STDOUT_FILENO, TIOCGWINSZ, &w );
+    char string[PATH_MAX];
+    ////////////////////////////////////////////////////////
+    if ( argc == 2)
+    if ( strcmp( argv[1] , "-s" ) ==  0 ) 
+    {
+       printf("Screen\n" );
+       printf("Env HOME:  %s\n", getenv( "HOME" ));
+       printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
+       printf("Env TERM ROW:  %d\n", w.ws_row );
+       printf("Env TERM COL:  %d\n", w.ws_col );
+       return 0;
+    }
+
+    printf("Env HOME:  %s\n", getenv( "HOME" ));
+    printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
+    printf("Env TERM ROW:  %d\n", w.ws_row );
+    printf("Env TERM COL:  %d\n", w.ws_col );
+
     strncpy( refclip, "" , PATH_MAX );
     int key = 0;  int fooi;
     char fichier[PATH_MAX];
-    char string[PATH_MAX];
     strncpy( pathbefore, getcwd( string, PATH_MAX), PATH_MAX );
 
     strncpy( ficheref, "", PATH_MAX);
     strncpy( fichepdffile, "", PATH_MAX);
 
-    struct winsize w; // need ioctl and unistd 
-    ioctl( STDOUT_FILENO, TIOCGWINSZ, &w );
-    printf("Env HOME:  %s\n", getenv( "HOME" ));
-    printf("Env PATH:  %s\n", getcwd( string, PATH_MAX ) );
-    //printf("Env LINES: %s\n", getenv( "LINES" ));
-    //printf("Env COLS:  %s\n", getenv( "COLUMNS" ));
-    printf("Env TERM ROW:  %d\n", w.ws_row );
-    printf("Env TERM COL:  %d\n", w.ws_col );
 
     ///////////////
     if ( argc == 1)
@@ -694,6 +704,29 @@ int main( int argc, char *argv[])
             printf("   |FICHE:%d|", fiche );
         }
 
+
+
+
+        else if (ch == 4 )  // c-d
+        {
+            notefiche = notefiche -10;
+            printf("   |NOTE FICHE:%d|", notefiche );
+            snprintf( string , 250 , "note = {not%d}",  notefiche );
+            fooi = readsearch( fichier , string , 1 );
+            fiche = fooi;
+            clear_screen( );
+            readfiche( fichier , fiche ); 
+        }
+        else if (ch == 21 )  //c-u
+        {
+            notefiche = notefiche + 10;
+            printf("   |NOTE FICHE:%d|", notefiche );
+            snprintf( string , 250 , "note = {not%d}",  notefiche );
+            fooi = readsearch( fichier , string , 1 );
+            fiche = fooi;
+            clear_screen( );
+            readfiche( fichier , fiche ); 
+        }
         else if (ch == '+') 
         {
             notefiche++;
@@ -721,6 +754,8 @@ int main( int argc, char *argv[])
              if ( viewmode == 2 ) readfiche( fichier , fiche ); 
              if ( viewmode >= 3 ) readfiche( fichier , fiche ); 
         }
+
+
 
         else if (ch == 'd') 
         {    fiche = fiche +10;
